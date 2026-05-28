@@ -15,7 +15,7 @@ initSocket(server);
 const path = require("path");
 
 //data base
-const { Connetion } = require("../backend/Config/dbConfig");
+const { Connetion } = require("./Config/dbConfig");
 
 //dotenv
 const dotenv = require("dotenv").config();
