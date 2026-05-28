@@ -201,7 +201,7 @@ exports.recent_otp = async function (req, res) {
       });
     }
 
-    if (!user.otp) {
+    if (user.otp) {
       return res.status(400).json({
         message: "Please verify your email first",
       });
