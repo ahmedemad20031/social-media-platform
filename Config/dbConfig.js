@@ -1,17 +1,25 @@
+// Config/dbConfig.js
+
 const mongoose = require("mongoose");
-require("dotenv").config();
 
-const Connection = async function () {
+const connectDB = async () => {
   try {
-    const Url = process.env.MONGO_URI;
+    // نقرأ الرابط من متغيرات البيئة
+    const mongoURI = process.env.MONGO_URI;
 
-    await mongoose.connect(Url);
-    console.log("رابط قاعدة البيانات هو:", Url);
+    await mongoose.connect(mongoURI, {
+      // 🟢 هذه الخيارات تجبر السيرفر على الاتصال المباشر وتخطي مشاكل الـ DNS والـ ReplicaSet
+      retryWrites: true,
+      w: "majority",
+      ssl: true,
+      // إذا كنت تستخدم إصدارات قديمة قد تحتاجها، لكن في Mongoose 7+ الخيارات أعلاه كافية جداً
+    });
 
-    console.log("database Connected");
+    console.log("MongoDB Connected Successfully! 🎉");
   } catch (error) {
-    console.log(error);
+    console.error("Database connection failed: ", error.message);
+    process.exit(1);
   }
 };
 
-module.exports = { Connection };
+module.exports = connectDB;
