@@ -92,7 +92,8 @@ exports.verify_otp = async function (req, res) {
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
-    if (!user.otpExpire || Date.now() > user.otpExpire) {
+
+    if (!user.otpExpire || Date.now() > new Date(user.otpExpire).getTime()) {
       user.otp = null;
       user.otpExpire = null;
 
