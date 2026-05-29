@@ -33,7 +33,7 @@ exports.register = async function (req, res) {
       return res.status(404).json({ message: "Phone Already exiest" });
     }
 
-    const image = req.file.path;
+    const profileImage = req.file.path ?? req.body.profileImage ?? null;
 
     // console.log(image);
 
@@ -43,7 +43,7 @@ exports.register = async function (req, res) {
       ...value,
       phone: value.phone,
       password: hashPassword,
-      profileImage: image,
+      profileImage: profileImage,
     });
 
     const otp = generateOtp.generate(6, {
