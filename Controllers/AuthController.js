@@ -55,7 +55,7 @@ exports.register = async function (req, res) {
     user.otp = otp;
     user.otpExpire = new Date(Date.now() + 2 * 60 * 1000);
 
-    await sendemail(
+    sendemail(
       value.email,
       `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
@@ -234,7 +234,7 @@ exports.recent_otp = async function (req, res) {
     user.otpLastSentAt = new Date();
     user.recentOtpCount = (user.recentOtpCount || 0) + 1;
 
-    await sendemail(
+    sendemail(
       value.email,
       `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
@@ -281,7 +281,7 @@ exports.forgetpassword = async function (req, res) {
     user.forgetOtpExpire = new Date(Date.now() + 2 * 60 * 1000);
     user.otpLastSentAt = new Date(Date.now());
 
-    await sendemail(
+    sendemail(
       value.email,
       `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
@@ -352,7 +352,7 @@ exports.resendForgetOtp = async function (req, res) {
 
     await user.save();
 
-    await sendemail(user.email, `Your new OTP is ${otp}`, "Reset Password OTP");
+    sendemail(user.email, `Your new OTP is ${otp}`, "Reset Password OTP");
 
     return res.status(200).json({
       message: "New OTP sent successfully",
