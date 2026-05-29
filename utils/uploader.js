@@ -4,10 +4,10 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    let dest = "uploads/users/";
+    let dest = path.join(__dirname, "../uploads/users/");
 
     if (req.originalUrl.includes("post")) {
-      dest = "uploads/posts/";
+      dest = path.join(__dirname, "../uploads/posts/");
     }
 
     if (!fs.existsSync(dest)) {
@@ -18,7 +18,8 @@ const storage = multer.diskStorage({
   },
 
   filename: function (req, file, cb) {
-    cb(null, Date.now() + "_" + file.originalname);
+    const cleanFileName = file.originalname.replace(/\s+/g, "_");
+    cb(null, Date.now() + "_" + cleanFileName);
   },
 });
 
@@ -30,9 +31,15 @@ const fileFilter = (req, file, cb) => {
   ) {
     cb(null, true);
   } else {
-    cb(new Error(" Not foundJPEG, PNG, MP4"), false);
+    cb(
+      new Error(
+        "Unsupported file format. Only JPEG, PNG, and MP4 are allowed.",
+      ),
+      false,
+    );
   }
 };
+
 const uploader = multer({ storage: storage, fileFilter: fileFilter });
 
 module.exports = uploader;
