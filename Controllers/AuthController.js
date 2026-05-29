@@ -80,6 +80,7 @@ exports.register = async function (req, res) {
   }
 };
 exports.verify_otp = async function (req, res) {
+  console.log("AUTH ROUTES LOADED");
   try {
     //validation data
     const { error, value } = verfiyValidation.validate(req.body, {
@@ -93,18 +94,24 @@ exports.verify_otp = async function (req, res) {
       return res.status(404).json({ message: "User Not Found" });
     }
 
+    if (user.otp !== value.otp) {
+      return res.status(404).json({ message: "Invalid Otp" });
+    }
+
     if (!user.otpExpire || new Date(user.otpExpire).getTime() < Date.now()) {
       user.otp = null;
       user.otpExpire = null;
+
+      console.log("OTP:", user.otp);
+      console.log("EXPIRE:", user.otpExpire);
+      console.log("NOW:", new Date());
+      console.log("TYPE:", typeof user.otpExpire);
 
       await user.save();
 
       return res.status(401).json({
         message: "Otp Expired",
       });
-    }
-    if (user.otp !== value.otp) {
-      return res.status(404).json({ message: "Invalid Otp" });
     }
 
     user.otp = null;
