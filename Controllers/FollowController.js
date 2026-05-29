@@ -86,7 +86,7 @@ exports.GetFollowers = async function (req, res) {
   try {
     const userId = req.user.id;
 
-    //الناس اللي بتتابع الشخص ده
+    //الناس اللي بتتابع الشخص دi
     const followers = await Follow.find({ following: userId }).populate(
       "follower",
       "firstName lastName profileImage",

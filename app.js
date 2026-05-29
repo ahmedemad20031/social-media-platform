@@ -15,7 +15,7 @@ initSocket(server);
 const path = require("path");
 
 //data base
-const { Connetion } = require("./Config/dbConfig");
+const { Connection } = require("./Config/dbConfig");
 
 //dotenv
 const dotenv = require("dotenv").config();
@@ -50,4 +50,5 @@ app.use("/api/v1/notifications", require("./Routes/NotificatioRoutes"));
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-Connetion();
+
+Connection();
