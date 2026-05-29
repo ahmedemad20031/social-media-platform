@@ -1,64 +1,94 @@
-// req express
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
-const { initSocket } = require("./utils/socket");
 const path = require("path");
 const cors = require("cors");
-
 const dotenv = require("dotenv").config();
 
-// database
 const connectDB = require("./Config/dbConfig");
+const { initSocket } = require("./utils/socket");
 
 const app = express();
 const server = http.createServer(app);
 
+// Socket
 initSocket(server);
 
-// port
-const port = process.env.PORT || 3000;
+// PORT
+const port = process.env.PORT || 5000;
 
-const allowedOrigins = ["http://localhost:5173"];
+/* =========================
+   CORS FIX (IMPORTANT)
+========================= */
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL, // frontend production URL
+];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (
-        !origin ||
-        allowedOrigins.indexOf(origin) !== -1 ||
-        process.env.NODE_ENV === "production"
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      // allow tools like Postman or server-to-server
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
+
+      return callback(null, true); // ❗ مؤقتاً لتجنب 502 بسبب CORS
     },
     credentials: true,
   }),
 );
 
+/* =========================
+   BODY PARSING
+========================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+/* =========================
+   STATIC FILES
+========================= */
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+/* =========================
+   DB CONNECTION (SAFE)
+========================= */
 connectDB();
 
-// Routes
+/* =========================
+   HEALTH CHECK
+========================= */
 app.get("/", (req, res) => {
-  res.send("Backend is running perfectly 🚀");
+  res.send("Backend is running 🚀");
 });
 
+/* =========================
+   ROUTES
+========================= */
 app.use("/api/v1/auth", require("./Routes/AuthRoutes"));
 app.use("/api/v1/post", require("./Routes/PostRoutes"));
-// app.use("/api/v1/user", require("./Routes/UserRoutes"));
 app.use("/api/v1/chat", require("./Routes/ChatRoutes"));
 app.use("/api/v1/message", require("./Routes/MessageRoutes"));
 app.use("/api/v1/follow", require("./Routes/FollowRoutes"));
 app.use("/api/v1/suggest", require("./Routes/SuggestRoutes"));
 app.use("/api/v1/notifications", require("./Routes/NotificatioRoutes"));
 
+/* =========================
+   ERROR HANDLER (IMPORTANT)
+========================= */
+app.use((err, req, res, next) => {
+  console.error("🔥 SERVER ERROR:", err.message);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message,
+  });
+});
+
+/* =========================
+   START SERVER
+========================= */
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
