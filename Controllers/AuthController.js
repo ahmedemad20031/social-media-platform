@@ -55,13 +55,13 @@ exports.register = async function (req, res) {
     user.otp = otp;
     user.otpExpire = new Date(Date.now() + 2 * 60 * 1000);
 
+    await user.save();
     sendemail(
       value.email,
       `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
-    await user.save();
     return res.status(201).json({
       message: "registered successfully please verify your email before login",
       data: {
@@ -93,7 +93,7 @@ exports.verify_otp = async function (req, res) {
       return res.status(404).json({ message: "User Not Found" });
     }
 
-    if (!user.otpExpire || Date.now() > new Date(user.otpExpire).getTime()) {
+    if (!user.otpExpire || new Date(user.otpExpire).getTime() < Date.now()) {
       user.otp = null;
       user.otpExpire = null;
 
@@ -115,6 +115,7 @@ exports.verify_otp = async function (req, res) {
       expiresIn: "7d",
     });
 
+    user.recentOtpCount = 0;
     await user.save();
     return res.status(200).json({
       message: "verfiyed successfully",
@@ -234,13 +235,13 @@ exports.recent_otp = async function (req, res) {
     user.otpLastSentAt = new Date();
     user.recentOtpCount = (user.recentOtpCount || 0) + 1;
 
+    await user.save();
+
     sendemail(
       value.email,
       `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
     );
-
-    await user.save();
 
     return res.status(200).json({
       message: "OTP sent successfully",
@@ -308,7 +309,10 @@ exports.resetpassword = async function (req, res) {
       return res.status(404).json({ message: "User Not Found" });
     }
 
-    if (new Date().getTime() > user.forgetOtpExpire) {
+    if (
+      !user.forgetOtpExpire ||
+      new Date(user.forgetOtpExpire).getTime() < Date.now()
+    ) {
       user.forgetOtp = null;
       user.forgetOtpExpire = null;
 
