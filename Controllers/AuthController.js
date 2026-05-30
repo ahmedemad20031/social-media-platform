@@ -8,7 +8,7 @@ const {
   forgetPasswordValidation,
   recentotpValidation,
 } = require("../Validations/AuthValidations");
-const bcrpyt = require("bcrypt");
+const bcrypt = require("bcrypt");
 const generateOtp = require("otp-generator");
 const sendemail = require("../utils/MailService");
 const jwt = require("jsonwebtoken");
@@ -33,11 +33,11 @@ exports.register = async function (req, res) {
       return res.status(404).json({ message: "Phone Already exiest" });
     }
 
-    const profileImage = req.file.path ?? req.body.profileImage ?? null;
+    const profileImage = req.file.path ?? req.body.profileImage;
 
     // console.log(image);
 
-    const hashPassword = await bcrpyt.hash(value.password, 10);
+    const hashPassword = await bcrypt.hash(value.password, 10);
 
     const user = new User({
       ...value,
@@ -80,32 +80,32 @@ exports.register = async function (req, res) {
   }
 };
 exports.verify_otp = async function (req, res) {
-  console.log("AUTH ROUTES LOADED");
   try {
-    //validation data
+    // validation data
     const { error, value } = verfiyValidation.validate(req.body, {
       abortEarly: false,
     });
+
     if (error) {
       return res.status(404).json({ message: error.details[0].message });
     }
+
     const user = await User.findOne({ email: value.email });
+
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
 
-    if (user.otp !== value.otp) {
-      return res.status(404).json({ message: "Invalid Otp" });
-    }
+    const isExpired =
+      !user.otpExpire || new Date(user.otpExpire).getTime() < Date.now();
 
-    if (!user.otpExpire || new Date(user.otpExpire).getTime() < Date.now()) {
-      user.otp = null;
-      user.otpExpire = null;
-
-      console.log("OTP:", user.otp);
+    if (isExpired) {
+      console.log("OTP EXPIRED CHECK");
       console.log("EXPIRE:", user.otpExpire);
       console.log("NOW:", new Date());
-      console.log("TYPE:", typeof user.otpExpire);
+
+      user.otp = null;
+      user.otpExpire = null;
 
       await user.save();
 
@@ -114,16 +114,25 @@ exports.verify_otp = async function (req, res) {
       });
     }
 
+    if (user.otp !== value.otp) {
+      return res.status(404).json({
+        message: "Invalid Otp",
+      });
+    }
+
+    // clear otp after success
     user.otp = null;
     user.otpExpire = null;
 
-    //generate token
+    user.recentOtpCount = 0;
+
+    // generate token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    user.recentOtpCount = 0;
     await user.save();
+
     return res.status(200).json({
       message: "verfiyed successfully",
       data: {
@@ -162,7 +171,7 @@ exports.login = async function (req, res) {
         .status(404)
         .json({ message: "Please verfiy your email first" });
     }
-    const isValid = await bcrpyt.compare(value.password, user.password);
+    const isValid = await bcrypt.compare(value.password, user.password);
     if (!isValid) {
       return res.status(404).json({ message: "Invalid Password" });
     }
@@ -327,10 +336,10 @@ exports.resetpassword = async function (req, res) {
       return res.status(404).json({ message: "Otp Expired" });
     }
     if (user.forgetOtp !== value.otp) {
-      return res.status(404).json({ message: "Invalid Otp" });
+      return res.status(400).json({ message: "Invalid Otp" });
     }
 
-    const newPassword = await bcrpyt.hash(value.password, 12);
+    const newPassword = await bcrypt.hash(value.password, 12);
     user.password = newPassword;
 
     user.forgetOtp = null;
@@ -343,6 +352,7 @@ exports.resetpassword = async function (req, res) {
     return res.status(500).json({ message: "Intrnal Server Error" });
   }
 };
+
 exports.resendForgetOtp = async function (req, res) {
   try {
     const user = await User.findOne({ email: req.body.email });

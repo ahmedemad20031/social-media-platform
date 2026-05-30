@@ -2,21 +2,22 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 
-const BASE_DIR = process.cwd();
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    let targetDir = path.join(BASE_DIR, "uploads", "users");
+    let dest = "./uploads";
 
+    console.log(req.originalUrl);
     if (req.originalUrl.includes("post")) {
-      targetDir = path.join(BASE_DIR, "uploads", "posts");
+      dest = "./uploads/posts";
+    } else if (req.originalUrl.includes("auth")) {
+      dest = "./uploads/users";
     }
 
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
     }
 
-    cb(null, targetDir);
+    cb(null, dest);
   },
 
   filename: function (req, file, cb) {

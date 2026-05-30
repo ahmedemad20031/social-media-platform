@@ -50,7 +50,7 @@ app.use(express.urlencoded({ extended: true }));
 /* =========================
    STATIC FILES
 ========================= */
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static("uploads"));
 
 /* =========================
    DB CONNECTION (SAFE)
@@ -74,17 +74,6 @@ app.use("/api/v1/message", require("./Routes/MessageRoutes"));
 app.use("/api/v1/follow", require("./Routes/FollowRoutes"));
 app.use("/api/v1/suggest", require("./Routes/SuggestRoutes"));
 app.use("/api/v1/notifications", require("./Routes/NotificatioRoutes"));
-
-/* =========================
-   ERROR HANDLER (IMPORTANT)
-========================= */
-app.use((err, req, res, next) => {
-  console.error("🔥 SERVER ERROR:", err.message);
-  res.status(500).json({
-    message: "Internal Server Error",
-    error: err.message,
-  });
-});
 
 /* =========================
    START SERVER
