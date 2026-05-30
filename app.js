@@ -35,15 +35,13 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(null, true); // ❗ مؤقتاً لتجنب 502 بسبب CORS
+      return callback(null, true);
     },
     credentials: true,
   }),
 );
 
-/* =========================
-   BODY PARSING
-========================= */
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
