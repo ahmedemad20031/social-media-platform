@@ -219,12 +219,6 @@ exports.recent_otp = async function (req, res) {
       });
     }
 
-    if (user.otp) {
-      return res.status(400).json({
-        message: "Please verify your email first",
-      });
-    }
-
     if (
       user.otpLastSentAt &&
       Date.now() - new Date(user.otpLastSentAt).getTime() < 60 * 1000
@@ -254,8 +248,8 @@ exports.recent_otp = async function (req, res) {
     await user.save();
 
     sendemail(
-      value.email,
-      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
+      user.email,
+      `Hi ${user.firstName} ${user.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
@@ -283,6 +277,15 @@ exports.forgetpassword = async function (req, res) {
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
+    if (
+      user.otpLastSentAt &&
+      Date.now() - new Date(user.otpLastSentAt).getTime() < 60 * 1000
+    ) {
+      return res.status(429).json({
+        message: "Please wait 1 minute before requesting again",
+      });
+    }
+
     if (user.otp) {
       return res
         .status(404)
@@ -299,8 +302,8 @@ exports.forgetpassword = async function (req, res) {
     user.otpLastSentAt = new Date(Date.now());
 
     sendemail(
-      value.email,
-      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
+      user.email,
+      `Hi ${user.firstName} ${user.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
