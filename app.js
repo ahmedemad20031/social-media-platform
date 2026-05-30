@@ -20,23 +20,9 @@ const port = process.env.PORT || 5000;
    CORS FIX (IMPORTANT)
 ========================= */
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.CLIENT_URL, // frontend production URL
-];
-
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow tools like Postman or server-to-server
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(null, true);
-    },
+    origin: ["https://social-media-platform-frontend-five.vercel.app"],
     credentials: true,
   }),
 );
