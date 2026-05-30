@@ -1,5 +1,5 @@
 const User = require("../model/User");
-const Post = require("../model/Post");
+
 const {
   registerValidation,
   loginValidation,
