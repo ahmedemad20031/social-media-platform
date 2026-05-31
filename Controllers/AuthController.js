@@ -57,8 +57,8 @@ exports.register = async function (req, res) {
 
     await user.save();
     sendemail(
-      value.email,
-      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
+      user.email,
+      `Hi ${user.firstName} ${user.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
