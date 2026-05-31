@@ -1,5 +1,4 @@
 const User = require("../model/User");
-
 const {
   registerValidation,
   loginValidation,
@@ -12,30 +11,29 @@ const bcrypt = require("bcrypt");
 const generateOtp = require("otp-generator");
 const sendemail = require("../utils/MailService");
 const jwt = require("jsonwebtoken");
-const { post } = require("../Routes/AuthRoutes");
+
 exports.register = async function (req, res) {
   try {
-    //validation data
+    // validation data
     const { error, value } = registerValidation.validate(req.body, {
       abortEarly: false,
     });
     if (error) {
-      return res.status(404).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
-    //check email
+
+    // check email
     const EmailExtise = await User.findOne({ email: value.email });
     if (EmailExtise) {
-      return res.status(404).json({ message: "Email Already exiest" });
+      return res.status(400).json({ message: "Email Already exists" });
     }
 
     const phoneExtise = await User.findOne({ phone: value.phone });
     if (phoneExtise) {
-      return res.status(404).json({ message: "Phone Already exiest" });
+      return res.status(400).json({ message: "Phone Already exists" });
     }
 
-    const profileImage = req.file.path ?? req.body.profileImage;
-
-    console.log(value);
+    const profileImage = req.file ? req.file.path : req.body.profileImage;
 
     const hashPassword = await bcrypt.hash(value.password, 10);
 
@@ -56,11 +54,12 @@ exports.register = async function (req, res) {
     user.otpExpire = new Date(Date.now() + 2 * 60 * 1000);
 
     await user.save();
-    await sendemail(
-      value.email,
-      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
-      "verfiyed",
-    );
+
+    sendemail({
+      to: value.email,
+      subject: "Verify Your Account - OTP",
+      text: `Hi ${value.firstName} ${value.lastName}, your OTP is ${otp}`,
+    }).catch((err) => console.log("Background email error:", err.message));
 
     return res.status(201).json({
       message: "registered successfully please verify your email before login",
@@ -76,18 +75,18 @@ exports.register = async function (req, res) {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.verify_otp = async function (req, res) {
   try {
-    // validation data
     const { error, value } = verfiyValidation.validate(req.body, {
       abortEarly: false,
     });
 
     if (error) {
-      return res.status(404).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
 
     const user = await User.findOne({ email: value.email });
@@ -100,33 +99,21 @@ exports.verify_otp = async function (req, res) {
       !user.otpExpire || new Date(user.otpExpire).getTime() < Date.now();
 
     if (isExpired) {
-      console.log("OTP EXPIRED CHECK");
-      console.log("EXPIRE:", user.otpExpire);
-      console.log("NOW:", new Date());
-
       user.otp = null;
       user.otpExpire = null;
-
       await user.save();
 
-      return res.status(401).json({
-        message: "Otp Expired",
-      });
+      return res.status(401).json({ message: "Otp Expired" });
     }
 
     if (user.otp !== value.otp) {
-      return res.status(404).json({
-        message: "Invalid Otp",
-      });
+      return res.status(400).json({ message: "Invalid Otp" });
     }
 
-    // clear otp after success
     user.otp = null;
     user.otpExpire = null;
-
     user.recentOtpCount = 0;
 
-    // generate token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
@@ -134,7 +121,7 @@ exports.verify_otp = async function (req, res) {
     await user.save();
 
     return res.status(200).json({
-      message: "verfiyed successfully",
+      message: "verified successfully",
       data: {
         token,
         user: {
@@ -149,33 +136,35 @@ exports.verify_otp = async function (req, res) {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 exports.login = async function (req, res) {
   try {
-    //validation data
     const { error, value } = loginValidation.validate(req.body, {
       abortEarly: false,
     });
     if (error) {
-      return res.status(404).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
+
     const user = await User.findOne({ email: value.email });
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
+
     if (user.otp) {
       return res
-        .status(404)
-        .json({ message: "Please verfiy your email first" });
+        .status(403)
+        .json({ message: "Please verify your email first" });
     }
+
     const isValid = await bcrypt.compare(value.password, user.password);
     if (!isValid) {
-      return res.status(404).json({ message: "Invalid Password" });
+      return res.status(400).json({ message: "Invalid Password" });
     }
-    //generate token
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
@@ -196,9 +185,10 @@ exports.login = async function (req, res) {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.recent_otp = async function (req, res) {
   try {
     const { error, value } = recentotpValidation.validate(req.body, {
@@ -206,17 +196,13 @@ exports.recent_otp = async function (req, res) {
     });
 
     if (error) {
-      return res.status(400).json({
-        message: error.details[0].message,
-      });
+      return res.status(400).json({ message: error.details[0].message });
     }
 
     const user = await User.findOne({ email: value.email });
 
     if (!user) {
-      return res.status(404).json({
-        message: "User Not Found",
-      });
+      return res.status(404).json({ message: "User Not Found" });
     }
 
     if (
@@ -229,9 +215,7 @@ exports.recent_otp = async function (req, res) {
     }
 
     if ((user.recentOtpCount || 0) >= 5) {
-      return res.status(429).json({
-        message: "OTP resend limit reached",
-      });
+      return res.status(429).json({ message: "OTP resend limit reached" });
     }
 
     const otp = generateOtp.generate(6, {
@@ -247,36 +231,34 @@ exports.recent_otp = async function (req, res) {
 
     await user.save();
 
-    await sendemail(
-      value.email,
-      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
-      "verfiyed",
-    );
+    sendemail({
+      to: value.email,
+      subject: "Resend Verification OTP",
+      text: `Hi, your new OTP is ${otp}`,
+    }).catch((err) => console.log("Background email error:", err.message));
 
-    return res.status(200).json({
-      message: "OTP sent successfully",
-    });
+    return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.forgetpassword = async function (req, res) {
   try {
-    //validation data
     const { error, value } = forgetPasswordValidation.validate(req.body, {
       abortEarly: false,
     });
     if (error) {
-      return res.status(404).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
+
     const user = await User.findOne({ email: value.email });
 
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
+
     if (
       user.otpLastSentAt &&
       Date.now() - new Date(user.otpLastSentAt).getTime() < 60 * 1000
@@ -288,9 +270,10 @@ exports.forgetpassword = async function (req, res) {
 
     if (user.otp) {
       return res
-        .status(404)
-        .json({ message: "Please verfiy your email first" });
+        .status(403)
+        .json({ message: "Please verify your email first" });
     }
+
     const otp = generateOtp.generate(6, {
       lowerCaseAlphabets: false,
       upperCaseAlphabets: false,
@@ -301,28 +284,30 @@ exports.forgetpassword = async function (req, res) {
     user.forgetOtpExpire = new Date(Date.now() + 2 * 60 * 1000);
     user.otpLastSentAt = new Date(Date.now());
 
-    await sendemail(
-      value.email,
-      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
-      "verfiyed",
-    );
-
     await user.save();
+
+    sendemail({
+      to: value.email,
+      subject: "Reset Your Password - OTP",
+      text: `Hi ${user.firstName} ${user.lastName}, your reset OTP code is ${otp}`,
+    }).catch((err) => console.log("Background email error:", err.message));
+
     return res.status(200).json({ message: "Otp sent successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.resetpassword = async function (req, res) {
   try {
-    //validation data
     const { error, value } = recentpassword.validate(req.body, {
       abortEarly: false,
     });
     if (error) {
-      return res.status(404).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
+
     const user = await User.findOne({ email: value.email });
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
@@ -334,10 +319,10 @@ exports.resetpassword = async function (req, res) {
     ) {
       user.forgetOtp = null;
       user.forgetOtpExpire = null;
-
       await user.save();
-      return res.status(404).json({ message: "Otp Expired" });
+      return res.status(400).json({ message: "Otp Expired" });
     }
+
     if (user.forgetOtp !== value.otp) {
       return res.status(400).json({ message: "Invalid Otp" });
     }
@@ -352,7 +337,7 @@ exports.resetpassword = async function (req, res) {
     return res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -364,7 +349,6 @@ exports.resendForgetOtp = async function (req, res) {
       return res.status(404).json({ message: "User Not Found" });
     }
 
-    // generate new OTP
     const otp = generateOtp.generate(6, {
       lowerCaseAlphabets: false,
       upperCaseAlphabets: false,
@@ -376,31 +360,32 @@ exports.resendForgetOtp = async function (req, res) {
 
     await user.save();
 
-    await sendemail(user.email, `Your new OTP is ${otp}`, "Reset Password OTP");
+    sendemail({
+      to: user.email,
+      subject: "Reset Password OTP",
+      text: `Your new OTP is ${otp}`,
+    }).catch((err) => console.log("Background email error:", err.message));
 
-    return res.status(200).json({
-      message: "New OTP sent successfully",
-    });
+    return res.status(200).json({ message: "New OTP sent successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.getme = async function (req, res) {
   try {
     const userId = req.user.id;
-    const user = await User.findById({
-      _id: userId,
-    }).select("-password -otp -otpExpire -otpLastSentAt");
+    const user = await User.findById({ _id: userId }).select(
+      "-password -otp -otpExpire -otpLastSentAt",
+    );
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
     return res.status(200).json({ message: "User Found", data: user });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -419,30 +404,25 @@ exports.UpdateProfile = async function (req, res) {
     user.phone = req.body.phone || user.phone;
     if (req.file) {
       user.profileImage = req.file.path;
-    } else {
-      user.profileImage = user.profileImage;
     }
 
     await user.save();
     return res.status(200).json({ message: "User Updated", data: user });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.logout = async function (req, res) {
   try {
-    return res.status(200).json({
-      message: "Logout successfully",
-    });
+    return res.status(200).json({ message: "Logout successfully" });
   } catch (error) {
     console.log(error);
-
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 exports.getuser = async function (req, res) {
   try {
     const userId = req.params.id;
@@ -452,10 +432,9 @@ exports.getuser = async function (req, res) {
     if (!user) {
       return res.status(404).json({ message: "User Not Found" });
     }
-
     return res.status(200).json({ message: "User Found", data: user });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Intrnal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
