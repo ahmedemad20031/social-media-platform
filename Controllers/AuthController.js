@@ -35,7 +35,7 @@ exports.register = async function (req, res) {
 
     const profileImage = req.file.path ?? req.body.profileImage;
 
-    // console.log(image);
+    console.log(value);
 
     const hashPassword = await bcrypt.hash(value.password, 10);
 
@@ -57,8 +57,8 @@ exports.register = async function (req, res) {
 
     await user.save();
     await sendemail(
-      user.email,
-      `Hi ${user.firstName} ${user.lastName} your otp is ${otp}`,
+      value.email,
+      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
@@ -248,8 +248,8 @@ exports.recent_otp = async function (req, res) {
     await user.save();
 
     await sendemail(
-      user.email,
-      `Hi ${user.firstName} ${user.lastName} your otp is ${otp}`,
+      value.email,
+      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
@@ -302,8 +302,8 @@ exports.forgetpassword = async function (req, res) {
     user.otpLastSentAt = new Date(Date.now());
 
     await sendemail(
-      user.email,
-      `Hi ${user.firstName} ${user.lastName} your otp is ${otp}`,
+      value.email,
+      `Hi ${value.firstName} ${value.lastName} your otp is ${otp}`,
       "verfiyed",
     );
 
