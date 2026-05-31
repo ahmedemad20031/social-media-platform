@@ -53,13 +53,13 @@ exports.register = async function (req, res) {
     user.otp = otp;
     user.otpExpire = new Date(Date.now() + 2 * 60 * 1000);
 
-    await user.save();
-
-    sendemail({
+    await sendemail({
       to: value.email,
       subject: "Verify Your Account - OTP",
       text: `Hi ${value.firstName} ${value.lastName}, your OTP is ${otp}`,
     }).catch((err) => console.log("Background email error:", err.message));
+
+    await user.save();
 
     return res.status(201).json({
       message: "registered successfully please verify your email before login",
