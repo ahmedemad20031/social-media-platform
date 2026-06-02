@@ -20,12 +20,13 @@ const port = process.env.PORT || 5000;
    CORS FIX (IMPORTANT)
 ========================= */
 
-app.use(
-  cors({
+const io = require("socket.io")(server, {
+  cors: {
     origin: ["https://social-media-platform-frontend-five.vercel.app"],
-    credentials: true,
-  }),
-);
+    methods: ["GET", "POST"],
+    credentials: true, // مهمة جداً طالما مفعله في الـ express cors فوق
+  },
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
