@@ -1,30 +1,27 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  pool: true, // 💡 تشغيل الـ Pool بيخلي الاتصال مستمر وميموتش من ريلواي
-  host: "smtp.gmail.com", // رجعنا الاسم الرسمي
-  port: 465, // هنقفل بورت 465 العادي ونخليه Secure تماماً
-  secure: true, // true مع بورت 465
+  host: "smtp-relay.brevo.com", // سيرفر Brevo العالمي المفتوح على ريلواي
+  port: 587, // البورت المعتمد والشغال دايماً
+  secure: false, // false للـ TLS
   auth: {
-    user: "ahmed.emad.soliman.me@gmail.com",
-    pass: process.env.PASS, // الـ App Password الـ 16 حرف
+    user: "ahmed.emad.soliman.me@gmail.com", // سيب إيميلك هنا عادي
+    pass: process.env.BREVO_KEY, // ⚠️ المفتاح السحري اللي هنجيبه حالا
   },
   tls: {
-    // 💡 إجبار السيرفر على عدم اشتراط شهادات أمان معقدة بتسبب الـ Timeout
     rejectUnauthorized: false,
-    minVersion: "TLSv1.2",
   },
 });
 
 async function sendemail({ to, subject, text }) {
   try {
     const info = await transporter.sendMail({
-      from: '"Social Media Platform" <ahmed.emad.soliman.me@gmail.com>',
+      from: '"Social Media Platform" <ahmed.emad.soliman.me@gmail.com>', // إيميلك الموثق
       to: to,
       subject: subject,
       text: text,
     });
-    console.log("🔥 OTP Sent Successfully to:", to);
+    console.log("🔥 OTP Sent via Brevo Successfully!");
   } catch (err) {
     console.log("❌ Error to send email:", err.message);
   }
