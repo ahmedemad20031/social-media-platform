@@ -1,14 +1,14 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: process.env.HOST,
-  port: process.env.PORT_MAIL,
+  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
   secure: false,
   auth: {
-    user: process.env.USER_PASS,
+    user: "ahmed.emad.soliman.me@gmail.com",
     pass: process.env.PASS,
   },
-
   dns: {
     family: 4,
   },
@@ -25,9 +25,9 @@ async function sendemail({ to, subject, text }) {
       subject: subject,
       text: text,
     });
-    console.log("otp sended ");
+    console.log("🔥 OTP sent successfully to:", to);
   } catch (err) {
-    console.log("error to send email", err.message);
+    console.log("❌ Error to send email:", err.message);
   }
 }
 
