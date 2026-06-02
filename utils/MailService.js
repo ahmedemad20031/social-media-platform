@@ -15,15 +15,27 @@ const transporter = nodemailer.createTransport({
 
 async function sendemail({ to, subject, text }) {
   try {
+    console.log("BREVO_PASS:", process.env.BREVO_PASS ? "FOUND" : "NOT FOUND");
+
+    await transporter.verify();
+    console.log("✅ SMTP Connected Successfully");
+
     const info = await transporter.sendMail({
       from: '"Social Media Platform" <ahmed.emad.soliman.me@gmail.com>',
-      to: to,
-      subject: subject,
-      text: text,
+      to,
+      subject,
+      text,
     });
-    console.log("🔥 OTP Sent via Brevo successfully to:", to);
+
+    console.log("🔥 OTP Sent Successfully");
+    console.log("Message ID:", info.messageId);
+
+    return true;
   } catch (err) {
-    console.log("❌ Error to send email:", err.message);
+    console.error("❌ Email Error:");
+    console.error(err);
+
+    return false;
   }
 }
 
