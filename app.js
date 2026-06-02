@@ -24,8 +24,9 @@ const io = require("socket.io")(server, {
   cors: {
     origin: ["https://social-media-platform-frontend-five.vercel.app"],
     methods: ["GET", "POST"],
-    credentials: true, // مهمة جداً طالما مفعله في الـ express cors فوق
+    credentials: true,
   },
+  transports: ["websocket", "polling"],
 });
 
 app.use(express.json());
