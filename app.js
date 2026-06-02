@@ -12,14 +12,6 @@ const server = http.createServer(app);
 
 // Socket
 initSocket(server);
-
-// PORT
-const port = process.env.PORT || 5000;
-
-/* =========================
-   CORS FIX (IMPORTANT)
-========================= */
-
 const io = require("socket.io")(server, {
   cors: {
     origin: ["https://social-media-platform-frontend-five.vercel.app"],
@@ -28,6 +20,13 @@ const io = require("socket.io")(server, {
   },
   transports: ["websocket", "polling"],
 });
+
+// PORT
+const port = process.env.PORT || 5000;
+
+/* =========================
+   CORS FIX (IMPORTANT)
+========================= */
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
