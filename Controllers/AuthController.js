@@ -53,13 +53,9 @@ exports.register = async function (req, res) {
     user.otp = otp;
     user.otpExpire = new Date(Date.now() + 2 * 60 * 1000);
 
-    await sendemail({
-      to: value.email,
-      subject: "Verify Your Account - OTP",
-      text: `Hi ${value.firstName} ${value.lastName}, your OTP is ${otp}`,
-    }).catch((err) => console.log("Background email error:", err.message));
-
     await user.save();
+
+    await sendMail(value.email, "verfied", `otp is ${otp}`);
 
     return res.status(201).json({
       message: "registered successfully please verify your email before login",
@@ -231,12 +227,7 @@ exports.recent_otp = async function (req, res) {
 
     await user.save();
 
-    sendemail({
-      to: value.email,
-      subject: "Resend Verification OTP",
-      text: `Hi, your new OTP is ${otp}`,
-    }).catch((err) => console.log("Background email error:", err.message));
-
+    await sendMail(value.email, "verfied", `otp is ${otp}`);
     return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.log(error);
@@ -285,12 +276,7 @@ exports.forgetpassword = async function (req, res) {
     user.otpLastSentAt = new Date(Date.now());
 
     await user.save();
-
-    sendemail({
-      to: value.email,
-      subject: "Reset Your Password - OTP",
-      text: `Hi ${user.firstName} ${user.lastName}, your reset OTP code is ${otp}`,
-    }).catch((err) => console.log("Background email error:", err.message));
+    await sendMail(value.email, "verfied", `otp is ${otp}`);
 
     return res.status(200).json({ message: "Otp sent successfully" });
   } catch (error) {
@@ -360,12 +346,7 @@ exports.resendForgetOtp = async function (req, res) {
 
     await user.save();
 
-    sendemail({
-      to: user.email,
-      subject: "Reset Password OTP",
-      text: `Your new OTP is ${otp}`,
-    }).catch((err) => console.log("Background email error:", err.message));
-
+    await sendMail(value.email, "verfied", `otp is ${otp}`);
     return res.status(200).json({ message: "New OTP sent successfully" });
   } catch (error) {
     console.log(error);

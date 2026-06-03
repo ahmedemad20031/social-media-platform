@@ -1,33 +1,28 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
+  host: "smtp.gmail.com",
   port: 587,
   secure: false,
   auth: {
-    user: "ad5b9a001@smtp-brevo.com",
-    pass: process.env.BREVO_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
+    user: "ahmed.emad.soliman.me@gmail.com",
+    pass: process.env.APP_PASS,
   },
 });
 
-async function sendemail({ to, subject, text }) {
+async function sendemail(email, message, title) {
   try {
-    console.log("BREVO_PASS:", process.env.BREVO_PASS ? "FOUND" : "NOT FOUND");
-
     await transporter.verify();
-    console.log("✅ SMTP Connected Successfully");
+    console.log("✅ Gmail SMTP Connected");
 
     const info = await transporter.sendMail({
-      from: '"Social Media Platform" <ahmed.emad.soliman.me@gmail.com>',
-      to,
-      subject,
-      text,
+      from: "ahmed.emad.soliman.me@gmail.com",
+      to: email,
+      subject: title,
+      text: message,
     });
 
-    console.log("🔥 OTP Sent Successfully");
+    console.log("✅ Email Sent");
     console.log("Message ID:", info.messageId);
 
     return true;
