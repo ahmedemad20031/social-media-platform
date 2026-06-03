@@ -1,16 +1,16 @@
-const Brevo = require("@getbrevo/brevo");
+// 1. استدعاء الكلاسات المطلوبة مباشرة من المكتبة
+const { TransactionalEmailsApi, SendSmtpEmail } = require("@getbrevo/brevo");
 
 const sendVerificationEmail = async (userEmail, otpCode) => {
   try {
-    // 1. إعداد الـ Client مباشرة باستخدام الـ API Key
-    let apiInstance = new Brevo.TransactionalEmailsApi();
-    apiInstance.setApiKey(
-      Brevo.TransactionalEmailsApiApiKeys.apiKey,
-      process.env.BREVO_API_KEY,
-    );
+    // 2. إنشاء نسخة من الـ API وتعيين الـ API Key مباشرة
+    const apiInstance = new TransactionalEmailsApi();
 
-    // 2. تجهيز بيانات الإيميل
-    let sendSmtpEmail = new Brevo.SendSmtpEmail();
+    // ضبط مفتاح الـ API
+    apiInstance.setApiKey(0, process.env.BREVO_API_KEY); // الرقم 0 يمثل معامل التوثيق الأول (apiKey)
+
+    // 3. تجهيز بيانات الإيميل
+    const sendSmtpEmail = new SendSmtpEmail();
 
     sendSmtpEmail.subject = "كود التحقق الخاص بحسابك 🎉";
     sendSmtpEmail.htmlContent = `
@@ -29,12 +29,15 @@ const sendVerificationEmail = async (userEmail, otpCode) => {
     };
     sendSmtpEmail.to = [{ email: userEmail }];
 
-    // 3. إرسال الطلب بالطريقة الجديدة
+    // 4. إرسال الطلب
     const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
     console.log("✅ Email Sent via Brevo Successfully:", response.body);
     return true;
   } catch (error) {
-    console.error("❌ Brevo Error:", error);
+    console.error(
+      "❌ Brevo Error Details:",
+      error.response ? error.response.body : error,
+    );
     return false;
   }
 };
