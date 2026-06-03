@@ -9,7 +9,7 @@ const {
 } = require("../Validations/AuthValidations");
 const bcrypt = require("bcrypt");
 const generateOtp = require("otp-generator");
-const sendMail = require("../utils/MailService");
+const sendemail = require("../utils/MailService");
 const jwt = require("jsonwebtoken");
 
 exports.register = async function (req, res) {
@@ -55,7 +55,7 @@ exports.register = async function (req, res) {
 
     await user.save();
 
-    await sendmail(value.email, "verfied", `otp is ${otp}`);
+    await sendemail(value.email, "verfied", `otp is ${otp}`);
 
     return res.status(201).json({
       message: "registered successfully please verify your email before login",
@@ -227,7 +227,7 @@ exports.recent_otp = async function (req, res) {
 
     await user.save();
 
-    await sendmail(value.email, "verfied", `otp is ${otp}`);
+    await sendemail(value.email, "verfied", `otp is ${otp}`);
     return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.log(error);
@@ -276,7 +276,7 @@ exports.forgetpassword = async function (req, res) {
     user.otpLastSentAt = new Date(Date.now());
 
     await user.save();
-    await sendmail(value.email, "verfied", `otp is ${otp}`);
+    await sendemail(value.email, "verfied", `otp is ${otp}`);
 
     return res.status(200).json({ message: "Otp sent successfully" });
   } catch (error) {
@@ -346,7 +346,7 @@ exports.resendForgetOtp = async function (req, res) {
 
     await user.save();
 
-    await sendmail(value.email, "verfied", `otp is ${otp}`);
+    await sendemail(user.email, "verfied", `otp is ${otp}`);
     return res.status(200).json({ message: "New OTP sent successfully" });
   } catch (error) {
     console.log(error);
