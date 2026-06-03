@@ -9,7 +9,7 @@ const {
 } = require("../Validations/AuthValidations");
 const bcrypt = require("bcrypt");
 const generateOtp = require("otp-generator");
-const sendemail = require("../utils/MailService");
+const sendVerificationEmail = require("../utils/MailService");
 const jwt = require("jsonwebtoken");
 
 exports.register = async function (req, res) {
@@ -55,7 +55,17 @@ exports.register = async function (req, res) {
 
     await user.save();
 
-    await sendemail(value.email, "verfied", `otp is ${otp}`);
+    const emailSent = await sendVerificationEmail(
+      user.email || value.email,
+      otp,
+    );
+
+    if (!emailSent) {
+      return res.status(500).json({
+        status: "error",
+        message: "error sending verification email, please try again later",
+      });
+    }
 
     return res.status(201).json({
       message: "registered successfully please verify your email before login",
@@ -226,8 +236,14 @@ exports.recent_otp = async function (req, res) {
     user.recentOtpCount = (user.recentOtpCount || 0) + 1;
 
     await user.save();
+    const emailSent = await sendVerificationEmail(user.email, otp);
+    if (!emailSent) {
+      return res.status(500).json({
+        status: "error",
+        message: "error sending verification email, please try again later",
+      });
+    }
 
-    await sendemail(value.email, "verfied", `otp is ${otp}`);
     return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.log(error);
