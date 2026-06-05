@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 const io = require("socket.io")(server, {
   cors: {
     origin: "https://social-media-platform-frontend-five.vercel.app",
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
   transports: ["websocket", "polling"],
