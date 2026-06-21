@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: "https://social-media-platform-frontend-five.vercel.app",
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", , "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
@@ -24,14 +24,14 @@ app.use(express.urlencoded({ extended: true }));
 /* =========================
    2️⃣ SOCKET.IO CONFIG
 ========================= */
-const io = require("socket.io")(server, {
-  cors: {
-    origin: "https://social-media-platform-frontend-five.vercel.app",
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    credentials: true,
-  },
-  transports: ["websocket", "polling"],
-});
+// const io = require("socket.io")(server, {
+//   cors: {
+//     origin: "https://social-media-platform-frontend-five.vercel.app",
+//     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+//     credentials: true,
+//   },
+//   transports: ["websocket", "polling"],
+// });
 
 require("./utils/socket").initSocket(server);
 
