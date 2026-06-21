@@ -35,7 +35,7 @@ router.get("/:id/dislikes", getAllDisLikes);
 router.get("/:id/comments", getAllComments);
 router.get("/count", AuthMiddleware, countPosts);
 
-router.put("/:id", AuthMiddleware, updatePosts);
+router.patch("/:id", AuthMiddleware, updatePosts);
 
 //delete
 router.delete("/:id", AuthMiddleware, deletePosts);

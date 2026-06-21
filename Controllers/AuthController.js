@@ -236,7 +236,10 @@ exports.recent_otp = async function (req, res) {
     user.recentOtpCount = (user.recentOtpCount || 0) + 1;
 
     await user.save();
-    const emailSent = await sendVerificationEmail(user.email, otp);
+    const emailSent = await sendVerificationEmail(
+      user.email || value.email,
+      otp,
+    );
     if (!emailSent) {
       return res.status(500).json({
         status: "error",
@@ -292,7 +295,17 @@ exports.forgetpassword = async function (req, res) {
     user.otpLastSentAt = new Date(Date.now());
 
     await user.save();
-    await sendemail(value.email, "verfied", `otp is ${otp}`);
+
+    const emailSent = await sendVerificationEmail(
+      user.email || value.email,
+      otp,
+    );
+    if (!emailSent) {
+      return res.status(500).json({
+        status: "error",
+        message: "error sending verification email, please try again later",
+      });
+    }
 
     return res.status(200).json({ message: "Otp sent successfully" });
   } catch (error) {

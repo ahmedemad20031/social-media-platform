@@ -33,9 +33,7 @@ const io = require("socket.io")(server, {
   transports: ["websocket", "polling"],
 });
 
-io.on("connection", (socket) => {
-  console.log(`User Connected: ${socket.id}`);
-});
+require("./utils/socket").initSocket(server);
 
 /* =========================
    3️⃣ STATIC FILES & DB
