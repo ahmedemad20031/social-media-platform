@@ -5,9 +5,20 @@ const initSocket = (server) => {
   io = new Server(server, {
     cors: {
       origin: "https://social-media-platform-frontend-five.vercel.app",
+      methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
     },
+    transports: ["websocket", "polling"],
   });
+
+  //   const io = require("socket.io")(server, {
+  //   cors: {
+  //     origin: "https://social-media-platform-frontend-five.vercel.app",
+  //
+  //     credentials: true,
+  //   },
+  //   transports: ["websocket", "polling"],
+  // });
 
   io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.id);
